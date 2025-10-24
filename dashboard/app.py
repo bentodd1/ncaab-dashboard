@@ -23,51 +23,30 @@ def get_connection():
     return pyodbc.connect(conn_str)
 
 # Data fetching functions
-def get_strategy_comparison(season=None, min_edge=3, conference_type=None):
-    """Get comparison of all three strategies"""
+def get_strategy_comparison(season=None, min_edge=3, conference_type=None, direction='UNDERDOG', month=None):
+    """Get ESPN vs Closing Line performance"""
     conn = get_connection()
 
     season_filter = f"AND v.SeasonYear = '{season}'" if season else ""
+    month_filter = f"AND MONTH(v.GameDate) = {month}" if month and month != 'ALL' else ""
     conf_join = ""
     conf_filter = ""
+    direction_filter = ""
 
     if conference_type and conference_type != 'ALL':
         conf_join = "INNER JOIN dbo.vw_GamesWithConferences c ON v.GameID = c.GameID"
         conf_filter = f"AND c.HomeConferenceType = '{conference_type}'"
 
+    # Direction filter: UNDERDOG (ESPNEdge > 0), FAVORITE (ESPNEdge < 0), BOTH (no filter)
+    if direction == 'UNDERDOG':
+        direction_filter = "AND v.ESPNEdge > 0"
+    elif direction == 'FAVORITE':
+        direction_filter = "AND v.ESPNEdge < 0"
+    # BOTH = no filter
+
     query = f"""
     SELECT
-        'ESPN vs Consensus' AS Strategy,
-        COUNT(*) AS Games,
-        SUM(CASE WHEN v.CoverResult = 'COVERED' THEN 1 ELSE 0 END) AS Wins,
-        SUM(CASE WHEN v.CoverResult = 'MISSED' THEN 1 ELSE 0 END) AS Losses,
-        CAST(SUM(CASE WHEN v.CoverResult = 'COVERED' THEN 1 ELSE 0 END) AS FLOAT) /
-            SUM(CASE WHEN v.CoverResult IN ('COVERED', 'MISSED') THEN 1 ELSE 0 END) * 100 AS WinPct,
-        (SUM(CASE WHEN v.CoverResult = 'COVERED' THEN 1 ELSE 0 END) * 100) -
-        (SUM(CASE WHEN v.CoverResult = 'MISSED' THEN 1 ELSE 0 END) * 110) AS Profit
-    FROM dbo.vw_ESPNFavorsUnderdog v
-    {conf_join}
-    WHERE ABS(v.ESPNEdge) >= {min_edge} AND v.CoverResult IS NOT NULL {season_filter} {conf_filter}
-
-    UNION ALL
-
-    SELECT
-        'ESPN vs Opening Line' AS Strategy,
-        COUNT(*) AS Games,
-        SUM(CASE WHEN v.CoverResult = 'COVERED' THEN 1 ELSE 0 END) AS Wins,
-        SUM(CASE WHEN v.CoverResult = 'MISSED' THEN 1 ELSE 0 END) AS Losses,
-        CAST(SUM(CASE WHEN v.CoverResult = 'COVERED' THEN 1 ELSE 0 END) AS FLOAT) /
-            SUM(CASE WHEN v.CoverResult IN ('COVERED', 'MISSED') THEN 1 ELSE 0 END) * 100 AS WinPct,
-        (SUM(CASE WHEN v.CoverResult = 'COVERED' THEN 1 ELSE 0 END) * 100) -
-        (SUM(CASE WHEN v.CoverResult = 'MISSED' THEN 1 ELSE 0 END) * 110) AS Profit
-    FROM dbo.vw_ESPNvsOpeningLine v
-    {conf_join}
-    WHERE ABS(v.ESPNEdge) >= {min_edge} AND v.CoverResult IS NOT NULL {season_filter} {conf_filter}
-
-    UNION ALL
-
-    SELECT
-        'ESPN vs Closing Line' AS Strategy,
+        'ESPN vs Line' AS Strategy,
         COUNT(*) AS Games,
         SUM(CASE WHEN v.CoverResult = 'COVERED' THEN 1 ELSE 0 END) AS Wins,
         SUM(CASE WHEN v.CoverResult = 'MISSED' THEN 1 ELSE 0 END) AS Losses,
@@ -77,17 +56,24 @@ def get_strategy_comparison(season=None, min_edge=3, conference_type=None):
         (SUM(CASE WHEN v.CoverResult = 'MISSED' THEN 1 ELSE 0 END) * 110) AS Profit
     FROM dbo.vw_ESPNvsClosingLine v
     {conf_join}
-    WHERE ABS(v.ESPNEdge) >= {min_edge} AND v.CoverResult IS NOT NULL {season_filter} {conf_filter}
+    WHERE ABS(v.ESPNEdge) >= {min_edge} AND v.CoverResult IS NOT NULL {season_filter} {month_filter} {conf_filter} {direction_filter}
     """
     df = pd.read_sql(query, conn)
     conn.close()
     return df
 
-def get_performance_by_season(season=None, min_edge=3):
+def get_performance_by_season(season=None, min_edge=3, direction='UNDERDOG', month=None):
     """Get performance data filtered by season"""
     conn = get_connection()
 
     season_filter = f"AND SeasonYear = '{season}'" if season else ""
+    month_filter = f"AND MONTH(GameDate) = {month}" if month and month != 'ALL' else ""
+    direction_filter = ""
+
+    if direction == 'UNDERDOG':
+        direction_filter = "AND ESPNEdge > 0"
+    elif direction == 'FAVORITE':
+        direction_filter = "AND ESPNEdge < 0"
 
     query = f"""
     SELECT
@@ -99,8 +85,8 @@ def get_performance_by_season(season=None, min_edge=3):
             SUM(CASE WHEN CoverResult IN ('COVERED', 'MISSED') THEN 1 ELSE 0 END) * 100 AS WinPct,
         (SUM(CASE WHEN CoverResult = 'COVERED' THEN 1 ELSE 0 END) * 100) -
         (SUM(CASE WHEN CoverResult = 'MISSED' THEN 1 ELSE 0 END) * 110) AS Profit
-    FROM dbo.vw_ESPNFavorsUnderdog
-    WHERE ABS(ESPNEdge) >= {min_edge} AND CoverResult IS NOT NULL {season_filter}
+    FROM dbo.vw_ESPNvsClosingLine
+    WHERE ABS(ESPNEdge) >= {min_edge} AND CoverResult IS NOT NULL {season_filter} {month_filter} {direction_filter}
     GROUP BY SeasonYear
     ORDER BY SeasonYear
     """
@@ -126,13 +112,13 @@ def get_recent_picks(season=None, limit=20):
         GameDate,
         HomeTeam,
         RoadTeam,
-        ConsensusLine,
+        ClosingLine,
         ESPNLine,
         ESPNEdge,
         HomeScore,
         RoadScore,
         CoverResult
-    FROM dbo.vw_ESPNFavorsUnderdog
+    FROM dbo.vw_ESPNvsClosingLine
     WHERE ABS(ESPNEdge) >= 3 {season_filter}
     ORDER BY GameDate DESC
     """
@@ -140,11 +126,18 @@ def get_recent_picks(season=None, limit=20):
     conn.close()
     return df
 
-def get_conference_comparison(season=None, min_edge=3):
+def get_conference_comparison(season=None, min_edge=3, direction='UNDERDOG', month=None):
     """Get performance by conference type - shows all types for comparison"""
     conn = get_connection()
 
     season_filter = f"AND v.SeasonYear = '{season}'" if season else ""
+    month_filter = f"AND MONTH(v.GameDate) = {month}" if month and month != 'ALL' else ""
+    direction_filter = ""
+
+    if direction == 'UNDERDOG':
+        direction_filter = "AND v.ESPNEdge > 0"
+    elif direction == 'FAVORITE':
+        direction_filter = "AND v.ESPNEdge < 0"
 
     query = f"""
     SELECT
@@ -156,10 +149,10 @@ def get_conference_comparison(season=None, min_edge=3):
             NULLIF(SUM(CASE WHEN v.CoverResult IN ('COVERED', 'MISSED') THEN 1 ELSE 0 END), 0) * 100 AS WinPct,
         (SUM(CASE WHEN v.CoverResult = 'COVERED' THEN 1 ELSE 0 END) * 100) -
         (SUM(CASE WHEN v.CoverResult = 'MISSED' THEN 1 ELSE 0 END) * 110) AS Profit
-    FROM dbo.vw_ESPNFavorsUnderdog v
+    FROM dbo.vw_ESPNvsClosingLine v
     INNER JOIN dbo.vw_GamesWithConferences c ON v.GameID = c.GameID
     WHERE ABS(v.ESPNEdge) >= {min_edge} AND v.CoverResult IS NOT NULL
-        AND c.HomeConferenceType != 'Unknown' {season_filter}
+        AND c.HomeConferenceType != 'Unknown' {season_filter} {month_filter} {direction_filter}
     GROUP BY c.HomeConferenceType
     ORDER BY WinPct DESC
     """
@@ -174,9 +167,9 @@ server = app.server  # For Azure deployment
 # App layout
 app.layout = html.Div([
     html.Div([
-        html.H1('ESPN BPI Strategy Dashboard',
+        html.H1('ESPN BPI vs Closing Line Dashboard',
                 style={'textAlign': 'center', 'color': '#2c3e50', 'marginBottom': 10}),
-        html.H3('NCAA Basketball Prediction Analysis',
+        html.H3('NCAA Basketball Betting Strategy Analysis',
                 style={'textAlign': 'center', 'color': '#7f8c8d', 'marginTop': 0}),
     ], style={'backgroundColor': '#ecf0f1', 'padding': '20px'}),
 
@@ -198,11 +191,28 @@ app.layout = html.Div([
             dcc.Dropdown(
                 id='edge-dropdown',
                 options=[
-                    {'label': '3 points', 'value': 3},
-                    {'label': '5 points', 'value': 5},
-                    {'label': '7 points', 'value': 7},
+                    {'label': '1+ points', 'value': 1},
+                    {'label': '2+ points', 'value': 2},
+                    {'label': '3+ points', 'value': 3},
+                    {'label': '4+ points', 'value': 4},
+                    {'label': '5+ points', 'value': 5},
+                    {'label': '7+ points', 'value': 7},
                 ],
                 value=3,
+                style={'width': '150px'}
+            ),
+        ], style={'display': 'inline-block', 'marginRight': '20px'}),
+
+        html.Div([
+            html.Label('ESPN Favors:', style={'fontWeight': 'bold'}),
+            dcc.Dropdown(
+                id='direction-dropdown',
+                options=[
+                    {'label': 'Underdog', 'value': 'UNDERDOG'},
+                    {'label': 'Favorite', 'value': 'FAVORITE'},
+                    {'label': 'Both', 'value': 'BOTH'},
+                ],
+                value='UNDERDOG',
                 style={'width': '150px'}
             ),
         ], style={'display': 'inline-block', 'marginRight': '20px'}),
@@ -219,6 +229,24 @@ app.layout = html.Div([
                 ],
                 value='ALL',
                 style={'width': '200px'}
+            ),
+        ], style={'display': 'inline-block', 'marginRight': '20px'}),
+
+        html.Div([
+            html.Label('Month:', style={'fontWeight': 'bold'}),
+            dcc.Dropdown(
+                id='month-dropdown',
+                options=[
+                    {'label': 'All Months', 'value': 'ALL'},
+                    {'label': 'November', 'value': 11},
+                    {'label': 'December', 'value': 12},
+                    {'label': 'January', 'value': 1},
+                    {'label': 'February', 'value': 2},
+                    {'label': 'March', 'value': 3},
+                    {'label': 'April', 'value': 4},
+                ],
+                value='ALL',
+                style={'width': '150px'}
             ),
         ], style={'display': 'inline-block'}),
 
@@ -267,12 +295,15 @@ app.layout = html.Div([
      Output('strategy-table', 'children')],
     [Input('season-dropdown', 'value'),
      Input('edge-dropdown', 'value'),
-     Input('conference-dropdown', 'value')]
+     Input('direction-dropdown', 'value'),
+     Input('conference-dropdown', 'value'),
+     Input('month-dropdown', 'value')]
 )
-def update_strategy_comparison(season, min_edge, conference_type):
+def update_strategy_comparison(season, min_edge, direction, conference_type, month):
     season_param = None if season == 'ALL' else season
     conf_param = None if conference_type == 'ALL' else conference_type
-    df = get_strategy_comparison(season_param, min_edge, conf_param)
+    month_param = None if month == 'ALL' else month
+    df = get_strategy_comparison(season_param, min_edge, conf_param, direction, month_param)
 
     # Check if dataframe is empty or has no valid data
     if df.empty or len(df) == 0 or df['Profit'].isna().all():
@@ -301,7 +332,8 @@ def update_strategy_comparison(season, min_edge, conference_type):
         title='Profitability Comparison',
         yaxis_title='Profit/Loss (per $100 bet)',
         showlegend=False,
-        height=400
+        height=450,
+        margin=dict(t=80, b=80, l=60, r=40)
     )
 
     # Create data table
@@ -328,11 +360,14 @@ def update_strategy_comparison(season, min_edge, conference_type):
 @app.callback(
     Output('season-performance-chart', 'figure'),
     [Input('season-dropdown', 'value'),
-     Input('edge-dropdown', 'value')]
+     Input('edge-dropdown', 'value'),
+     Input('direction-dropdown', 'value'),
+     Input('month-dropdown', 'value')]
 )
-def update_season_performance(season, min_edge):
+def update_season_performance(season, min_edge, direction, month):
     season_param = None if season == 'ALL' else season
-    df = get_performance_by_season(season_param, min_edge)
+    month_param = None if month == 'ALL' else month
+    df = get_performance_by_season(season_param, min_edge, direction, month_param)
 
     fig = go.Figure()
 
@@ -363,7 +398,8 @@ def update_season_performance(season, min_edge):
         yaxis=dict(title='Profit/Loss ($)'),
         yaxis2=dict(title='Win Percentage (%)', overlaying='y', side='right'),
         hovermode='x unified',
-        height=400
+        height=450,
+        margin=dict(t=80, b=80, l=60, r=60)
     )
 
     return fig
@@ -378,8 +414,20 @@ def update_recent_picks(season):
 
     df_display = df.copy()
     df_display['GameDate'] = pd.to_datetime(df_display['GameDate']).dt.strftime('%Y-%m-%d')
-    df_display['Matchup'] = df_display['HomeTeam'] + ' vs ' + df_display['RoadTeam']
-    df_display = df_display[['GameDate', 'Matchup', 'ConsensusLine', 'ESPNLine', 'ESPNEdge', 'CoverResult']]
+
+    # Format matchup to show favorite: "Florida favored by 6.95" or "UConn +6.95 underdog"
+    def format_matchup(row):
+        line = row['ClosingLine']
+        if line > 0:
+            return f"{row['HomeTeam']} favored by {line:.1f}"
+        elif line < 0:
+            return f"{row['RoadTeam']} favored by {abs(line):.1f}"
+        else:
+            return f"{row['HomeTeam']} vs {row['RoadTeam']} (Pick'em)"
+
+    df_display['Matchup'] = df_display.apply(format_matchup, axis=1)
+    df_display['Score'] = df_display['HomeScore'].astype(str) + '-' + df_display['RoadScore'].astype(str)
+    df_display = df_display[['GameDate', 'Matchup', 'Score', 'ClosingLine', 'ESPNLine', 'ESPNEdge', 'CoverResult']]
 
     table = dash_table.DataTable(
         data=df_display.to_dict('records'),
@@ -415,11 +463,14 @@ def update_recent_picks(season):
     [Output('conference-comparison-chart', 'figure'),
      Output('conference-table', 'children')],
     [Input('season-dropdown', 'value'),
-     Input('edge-dropdown', 'value')]
+     Input('edge-dropdown', 'value'),
+     Input('direction-dropdown', 'value'),
+     Input('month-dropdown', 'value')]
 )
-def update_conference_comparison(season, min_edge):
+def update_conference_comparison(season, min_edge, direction, month):
     season_param = None if season == 'ALL' else season
-    df = get_conference_comparison(season_param, min_edge)
+    month_param = None if month == 'ALL' else month
+    df = get_conference_comparison(season_param, min_edge, direction, month_param)
 
     if df.empty:
         # No data available
@@ -469,7 +520,8 @@ def update_conference_comparison(season, min_edge):
         yaxis=dict(title='Win Percentage (%)'),
         yaxis2=dict(title='Profit/Loss ($)', overlaying='y', side='right'),
         hovermode='x unified',
-        height=400,
+        height=450,
+        margin=dict(t=80, b=80, l=60, r=60),
         showlegend=True
     )
 
