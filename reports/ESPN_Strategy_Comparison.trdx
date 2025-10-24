@@ -1,0 +1,339 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Report Width="8.5in" Name="ESPN_Strategy_Comparison" xmlns="http://schemas.telerik.com/reporting/2025/2.0">
+  <DataSources>
+    <SqlDataSource ConnectionString="SportsAnalytics" Name="comparisonDataSource">
+      <SelectCommand>
+SELECT
+    'ESPN vs Consensus Models' AS Strategy,
+    COUNT(*) AS TotalGames,
+    SUM(CASE WHEN CoverResult = 'COVERED' THEN 1 ELSE 0 END) AS Wins,
+    SUM(CASE WHEN CoverResult = 'MISSED' THEN 1 ELSE 0 END) AS Losses,
+    CAST(SUM(CASE WHEN CoverResult = 'COVERED' THEN 1 ELSE 0 END) AS FLOAT) /
+        SUM(CASE WHEN CoverResult IN ('COVERED', 'MISSED') THEN 1 ELSE 0 END) * 100 AS WinPercentage,
+    (SUM(CASE WHEN CoverResult = 'COVERED' THEN 1 ELSE 0 END) * 100) -
+    (SUM(CASE WHEN CoverResult = 'MISSED' THEN 1 ELSE 0 END) * 110) AS ProfitLoss,
+    'Best - ESPN beats other models' AS Interpretation,
+    1 AS SortOrder
+FROM dbo.vw_ESPNFavorsUnderdog
+WHERE ABS(ESPNEdge) >= 3 AND CoverResult IS NOT NULL
+
+UNION ALL
+
+SELECT
+    'ESPN vs Opening Line' AS Strategy,
+    COUNT(*) AS TotalGames,
+    SUM(CASE WHEN CoverResult = 'COVERED' THEN 1 ELSE 0 END) AS Wins,
+    SUM(CASE WHEN CoverResult = 'MISSED' THEN 1 ELSE 0 END) AS Losses,
+    CAST(SUM(CASE WHEN CoverResult = 'COVERED' THEN 1 ELSE 0 END) AS FLOAT) /
+        SUM(CASE WHEN CoverResult IN ('COVERED', 'MISSED') THEN 1 ELSE 0 END) * 100 AS WinPercentage,
+    (SUM(CASE WHEN CoverResult = 'COVERED' THEN 1 ELSE 0 END) * 100) -
+    (SUM(CASE WHEN CoverResult = 'MISSED' THEN 1 ELSE 0 END) * 110) AS ProfitLoss,
+    'Marginal - Barely profitable' AS Interpretation,
+    2 AS SortOrder
+FROM dbo.vw_ESPNvsOpeningLine
+WHERE ABS(ESPNEdge) >= 3 AND CoverResult IS NOT NULL
+
+UNION ALL
+
+SELECT
+    'ESPN vs Closing Line' AS Strategy,
+    COUNT(*) AS TotalGames,
+    SUM(CASE WHEN CoverResult = 'COVERED' THEN 1 ELSE 0 END) AS Wins,
+    SUM(CASE WHEN CoverResult = 'MISSED' THEN 1 ELSE 0 END) AS Losses,
+    CAST(SUM(CASE WHEN CoverResult = 'COVERED' THEN 1 ELSE 0 END) AS FLOAT) /
+        SUM(CASE WHEN CoverResult IN ('COVERED', 'MISSED') THEN 1 ELSE 0 END) * 100 AS WinPercentage,
+    (SUM(CASE WHEN CoverResult = 'COVERED' THEN 1 ELSE 0 END) * 100) -
+    (SUM(CASE WHEN CoverResult = 'MISSED' THEN 1 ELSE 0 END) * 110) AS ProfitLoss,
+    'Loss - Cannot beat efficient market' AS Interpretation,
+    3 AS SortOrder
+
+ORDER BY SortOrder
+      </SelectCommand>
+    </SqlDataSource>
+  </DataSources>
+  <Items>
+    <PageHeaderSection Height="1.5in" Name="pageHeader">
+      <Items>
+        <TextBox Width="8in" Height="0.5in" Left="0.25in" Top="0.25in" Name="titleBox">
+          <Value>ESPN Prediction Strategy Comparison</Value>
+          <Style>
+            <Font>
+              <Bold>True</Bold>
+              <Size>20pt</Size>
+            </Font>
+            <TextAlign>Center</TextAlign>
+          </Style>
+        </TextBox>
+        <TextBox Width="8in" Height="0.3in" Left="0.25in" Top="0.8in" Name="subtitleBox">
+          <Value>Comparing ESPN BPI Against Different Benchmarks (3+ Point Edge)</Value>
+          <Style>
+            <Font>
+              <Size>12pt</Size>
+              <Italic>True</Italic>
+            </Font>
+            <TextAlign>Center</TextAlign>
+            <Color>Gray</Color>
+          </Style>
+        </TextBox>
+      </Items>
+    </PageHeaderSection>
+    <DetailSection Height="2in" Name="detailSection">
+      <Items>
+        <Table DataSourceName="comparisonDataSource" Width="7.5in" Height="1in" Left="0.5in" Top="0.2in" Name="comparisonTable">
+          <Body>
+            <Columns>
+              <Column Width="1.8in" />
+              <Column Width="0.8in" />
+              <Column Width="0.8in" />
+              <Column Width="0.8in" />
+              <Column Width="1in" />
+              <Column Width="1.2in" />
+              <Column Width="2in" />
+            </Columns>
+            <Rows>
+              <Row Height="0.3in" />
+            </Rows>
+            <Cells>
+              <TableCell RowIndex="0" ColumnIndex="0">
+                <ReportItem>
+                  <TextBox Name="strategyBox">
+                    <Bindings>
+                      <Binding Path="Value" Expression="=Fields.Strategy" />
+                    </Bindings>
+                  </TextBox>
+                </ReportItem>
+              </TableCell>
+              <TableCell RowIndex="0" ColumnIndex="1">
+                <ReportItem>
+                  <TextBox Name="gamesBox">
+                    <Bindings>
+                      <Binding Path="Value" Expression="=Fields.TotalGames" />
+                    </Bindings>
+                    <Style>
+                      <TextAlign>Center</TextAlign>
+                    </Style>
+                  </TextBox>
+                </ReportItem>
+              </TableCell>
+              <TableCell RowIndex="0" ColumnIndex="2">
+                <ReportItem>
+                  <TextBox Name="winsBox">
+                    <Bindings>
+                      <Binding Path="Value" Expression="=Fields.Wins" />
+                    </Bindings>
+                    <Style>
+                      <TextAlign>Center</TextAlign>
+                    </Style>
+                  </TextBox>
+                </ReportItem>
+              </TableCell>
+              <TableCell RowIndex="0" ColumnIndex="3">
+                <ReportItem>
+                  <TextBox Name="lossesBox">
+                    <Bindings>
+                      <Binding Path="Value" Expression="=Fields.Losses" />
+                    </Bindings>
+                    <Style>
+                      <TextAlign>Center</TextAlign>
+                    </Style>
+                  </TextBox>
+                </ReportItem>
+              </TableCell>
+              <TableCell RowIndex="0" ColumnIndex="4">
+                <ReportItem>
+                  <TextBox Name="winPctBox">
+                    <Bindings>
+                      <Binding Path="Value" Expression="=Fields.WinPercentage" />
+                    </Bindings>
+                    <Format>{0:N2}%</Format>
+                    <Style>
+                      <TextAlign>Center</TextAlign>
+                      <Font>
+                        <Bold>True</Bold>
+                      </Font>
+                    </Style>
+                  </TextBox>
+                </ReportItem>
+              </TableCell>
+              <TableCell RowIndex="0" ColumnIndex="5">
+                <ReportItem>
+                  <TextBox Name="profitBox">
+                    <Bindings>
+                      <Binding Path="Value" Expression="=Fields.ProfitLoss" />
+                    </Bindings>
+                    <Format>${0:N0}</Format>
+                    <Style>
+                      <TextAlign>Right</TextAlign>
+                      <Font>
+                        <Bold>True</Bold>
+                      </Font>
+                    </Style>
+                  </TextBox>
+                </ReportItem>
+              </TableCell>
+              <TableCell RowIndex="0" ColumnIndex="6">
+                <ReportItem>
+                  <TextBox Name="interpBox">
+                    <Bindings>
+                      <Binding Path="Value" Expression="=Fields.Interpretation" />
+                    </Bindings>
+                    <Style>
+                      <Font>
+                        <Size>9pt</Size>
+                        <Italic>True</Italic>
+                      </Font>
+                    </Style>
+                  </TextBox>
+                </ReportItem>
+              </TableCell>
+            </Cells>
+          </Body>
+          <TableGroups>
+            <TableGroup Name="tableGroup">
+              <Groupings>
+                <Grouping />
+              </Groupings>
+              <ReportItem>
+                <Table>
+                  <Body>
+                    <Columns>
+                      <Column Width="1.8in" />
+                      <Column Width="0.8in" />
+                      <Column Width="0.8in" />
+                      <Column Width="0.8in" />
+                      <Column Width="1in" />
+                      <Column Width="1.2in" />
+                      <Column Width="2in" />
+                    </Columns>
+                    <Rows>
+                      <Row Height="0.35in" />
+                    </Rows>
+                    <Cells>
+                      <TableCell RowIndex="0" ColumnIndex="0">
+                        <ReportItem>
+                          <TextBox Name="header1">
+                            <Value>Strategy</Value>
+                            <Style>
+                              <BackgroundColor>DarkBlue</BackgroundColor>
+                              <Color>White</Color>
+                              <Font>
+                                <Bold>True</Bold>
+                              </Font>
+                              <VerticalAlign>Middle</VerticalAlign>
+                              <Padding>5pt</Padding>
+                            </Style>
+                          </TextBox>
+                        </ReportItem>
+                      </TableCell>
+                      <TableCell RowIndex="0" ColumnIndex="1">
+                        <ReportItem>
+                          <TextBox Name="header2">
+                            <Value>Games</Value>
+                            <Style>
+                              <BackgroundColor>DarkBlue</BackgroundColor>
+                              <Color>White</Color>
+                              <Font>
+                                <Bold>True</Bold>
+                              </Font>
+                              <TextAlign>Center</TextAlign>
+                              <VerticalAlign>Middle</VerticalAlign>
+                            </Style>
+                          </TextBox>
+                        </ReportItem>
+                      </TableCell>
+                      <TableCell RowIndex="0" ColumnIndex="2">
+                        <ReportItem>
+                          <TextBox Name="header3">
+                            <Value>Wins</Value>
+                            <Style>
+                              <BackgroundColor>DarkBlue</BackgroundColor>
+                              <Color>White</Color>
+                              <Font>
+                                <Bold>True</Bold>
+                              </Font>
+                              <TextAlign>Center</TextAlign>
+                              <VerticalAlign>Middle</VerticalAlign>
+                            </Style>
+                          </TextBox>
+                        </ReportItem>
+                      </TableCell>
+                      <TableCell RowIndex="0" ColumnIndex="3">
+                        <ReportItem>
+                          <TextBox Name="header4">
+                            <Value>Losses</Value>
+                            <Style>
+                              <BackgroundColor>DarkBlue</BackgroundColor>
+                              <Color>White</Color>
+                              <Font>
+                                <Bold>True</Bold>
+                              </Font>
+                              <TextAlign>Center</TextAlign>
+                              <VerticalAlign>Middle</VerticalAlign>
+                            </Style>
+                          </TextBox>
+                        </ReportItem>
+                      </TableCell>
+                      <TableCell RowIndex="0" ColumnIndex="4">
+                        <ReportItem>
+                          <TextBox Name="header5">
+                            <Value>Win %</Value>
+                            <Style>
+                              <BackgroundColor>DarkBlue</BackgroundColor>
+                              <Color>White</Color>
+                              <Font>
+                                <Bold>True</Bold>
+                              </Font>
+                              <TextAlign>Center</TextAlign>
+                              <VerticalAlign>Middle</VerticalAlign>
+                            </Style>
+                          </TextBox>
+                        </ReportItem>
+                      </TableCell>
+                      <TableCell RowIndex="0" ColumnIndex="5">
+                        <ReportItem>
+                          <TextBox Name="header6">
+                            <Value>Profit/Loss</Value>
+                            <Style>
+                              <BackgroundColor>DarkBlue</BackgroundColor>
+                              <Color>White</Color>
+                              <Font>
+                                <Bold>True</Bold>
+                              </Font>
+                              <TextAlign>Center</TextAlign>
+                              <VerticalAlign>Middle</VerticalAlign>
+                            </Style>
+                          </TextBox>
+                        </ReportItem>
+                      </TableCell>
+                      <TableCell RowIndex="0" ColumnIndex="6">
+                        <ReportItem>
+                          <TextBox Name="header7">
+                            <Value>Analysis</Value>
+                            <Style>
+                              <BackgroundColor>DarkBlue</BackgroundColor>
+                              <Color>White</Color>
+                              <Font>
+                                <Bold>True</Bold>
+                              </Font>
+                              <TextAlign>Center</TextAlign>
+                              <VerticalAlign>Middle</VerticalAlign>
+                            </Style>
+                          </TextBox>
+                        </ReportItem>
+                      </TableCell>
+                    </Cells>
+                  </Body>
+                </Table>
+              </ReportItem>
+            </TableGroup>
+          </TableGroups>
+        </Table>
+      </Items>
+    </DetailSection>
+  </Items>
+  <PageSettings PaperKind="Letter" Landscape="False">
+    <Margins>
+      <MarginsU Left="0.5in" Right="0.5in" Top="0.5in" Bottom="0.5in" />
+    </Margins>
+  </PageSettings>
+</Report>

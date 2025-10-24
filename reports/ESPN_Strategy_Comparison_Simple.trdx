@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Report Width="8.5in" Name="ESPN_Strategy_Comparison" xmlns="http://schemas.telerik.com/reporting/2025/2.0">
+  <DataSources>
+    <SqlDataSource ConnectionString="SportsAnalytics" SelectCommand="SELECT 'ESPN vs Consensus Models' AS Strategy, COUNT(*) AS TotalGames, SUM(CASE WHEN CoverResult = 'COVERED' THEN 1 ELSE 0 END) AS Wins, SUM(CASE WHEN CoverResult = 'MISSED' THEN 1 ELSE 0 END) AS Losses, CAST(SUM(CASE WHEN CoverResult = 'COVERED' THEN 1 ELSE 0 END) AS FLOAT) / SUM(CASE WHEN CoverResult IN ('COVERED', 'MISSED') THEN 1 ELSE 0 END) * 100 AS WinPercentage, (SUM(CASE WHEN CoverResult = 'COVERED' THEN 1 ELSE 0 END) * 100) - (SUM(CASE WHEN CoverResult = 'MISSED' THEN 1 ELSE 0 END) * 110) AS ProfitLoss, 'Best - ESPN beats other models' AS Interpretation FROM dbo.vw_ESPNFavorsUnderdog WHERE ABS(ESPNEdge) >= 3 AND CoverResult IS NOT NULL UNION ALL SELECT 'ESPN vs Opening Line' AS Strategy, COUNT(*) AS TotalGames, SUM(CASE WHEN CoverResult = 'COVERED' THEN 1 ELSE 0 END) AS Wins, SUM(CASE WHEN CoverResult = 'MISSED' THEN 1 ELSE 0 END) AS Losses, CAST(SUM(CASE WHEN CoverResult = 'COVERED' THEN 1 ELSE 0 END) AS FLOAT) / SUM(CASE WHEN CoverResult IN ('COVERED', 'MISSED') THEN 1 ELSE 0 END) * 100 AS WinPercentage, (SUM(CASE WHEN CoverResult = 'COVERED' THEN 1 ELSE 0 END) * 100) - (SUM(CASE WHEN CoverResult = 'MISSED' THEN 1 ELSE 0 END) * 110) AS ProfitLoss, 'Marginal - Barely profitable' AS Interpretation FROM dbo.vw_ESPNvsOpeningLine WHERE ABS(ESPNEdge) >= 3 AND CoverResult IS NOT NULL UNION ALL SELECT 'ESPN vs Closing Line' AS Strategy, COUNT(*) AS TotalGames, SUM(CASE WHEN CoverResult = 'COVERED' THEN 1 ELSE 0 END) AS Wins, SUM(CASE WHEN CoverResult = 'MISSED' THEN 1 ELSE 0 END) AS Losses, CAST(SUM(CASE WHEN CoverResult = 'COVERED' THEN 1 ELSE 0 END) AS FLOAT) / SUM(CASE WHEN CoverResult IN ('COVERED', 'MISSED') THEN 1 ELSE 0 END) * 100 AS WinPercentage, (SUM(CASE WHEN CoverResult = 'COVERED' THEN 1 ELSE 0 END) * 100) - (SUM(CASE WHEN CoverResult = 'MISSED' THEN 1 ELSE 0 END) * 110) AS ProfitLoss, 'Loss - Cannot beat efficient market' AS Interpretation" Name="comparisonDataSource" />
+  </DataSources>
+  <Items>
+    <PageHeaderSection Height="1in" Name="pageHeaderSection1" />
+    <DetailSection Height="3in" Name="detailSection1">
+      <Items>
+        <Table DataSourceName="comparisonDataSource" Width="8in" Height="0.5in" Left="0.25in" Top="0.5in" Name="table1">
+          <Body>
+            <Cells>
+              <TableCell RowIndex="0" ColumnIndex="0">
+                <ReportItem>
+                  <TextBox Name="textBox1">
+                    <Bindings>
+                      <Binding Path="Value" Expression="=Fields.Strategy" />
+                    </Bindings>
+                  </TextBox>
+                </ReportItem>
+              </TableCell>
+              <TableCell RowIndex="0" ColumnIndex="1">
+                <ReportItem>
+                  <TextBox Name="textBox2">
+                    <Bindings>
+                      <Binding Path="Value" Expression="=Fields.TotalGames" />
+                    </Bindings>
+                  </TextBox>
+                </ReportItem>
+              </TableCell>
+              <TableCell RowIndex="0" ColumnIndex="2">
+                <ReportItem>
+                  <TextBox Name="textBox3">
+                    <Bindings>
+                      <Binding Path="Value" Expression="=Fields.Wins" />
+                    </Bindings>
+                  </TextBox>
+                </ReportItem>
+              </TableCell>
+              <TableCell RowIndex="0" ColumnIndex="3">
+                <ReportItem>
+                  <TextBox Name="textBox4">
+                    <Bindings>
+                      <Binding Path="Value" Expression="=Fields.Losses" />
+                    </Bindings>
+                  </TextBox>
+                </ReportItem>
+              </TableCell>
+              <TableCell RowIndex="0" ColumnIndex="4">
+                <ReportItem>
+                  <TextBox Name="textBox5">
+                    <Bindings>
+                      <Binding Path="Value" Expression="=Fields.WinPercentage" />
+                    </Bindings>
+                  </TextBox>
+                </ReportItem>
+              </TableCell>
+              <TableCell RowIndex="0" ColumnIndex="5">
+                <ReportItem>
+                  <TextBox Name="textBox6">
+                    <Bindings>
+                      <Binding Path="Value" Expression="=Fields.ProfitLoss" />
+                    </Bindings>
+                  </TextBox>
+                </ReportItem>
+              </TableCell>
+            </Cells>
+          </Body>
+        </Table>
+      </Items>
+    </DetailSection>
+    <PageFooterSection Height="1in" Name="pageFooterSection1" />
+  </Items>
+  <PageSettings PaperKind="Letter" Landscape="False">
+    <Margins>
+      <MarginsU Left="1in" Right="1in" Top="1in" Bottom="1in" />
+    </Margins>
+  </PageSettings>
+</Report>

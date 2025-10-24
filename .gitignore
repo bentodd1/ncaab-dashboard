@@ -1,0 +1,75 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+ENV/
+*.egg-info/
+dist/
+build/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Virtual environments
+dashboard/venv/
+dashboard/env/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# SQL Server
+*.bak
+*.ldf
+*.mdf
+
+# Logs
+*.log
+logs/
+
+# Telerik Reports
+*.trdp
+*.trbp
+
+# Sensitive data (if any)
+*.env
+.env
+secrets.json
+appsettings.*.json
+
+# Temporary files
+*.tmp
+temp/
+tmp/
+
+# Output files
+team_list.txt
+teams.txt
+output/
+
+# Azure
+.azure/
+
+# Jupyter Notebooks (if used)
+.ipynb_checkpoints/
+*.ipynb
+
+# Data files - KEEP THESE IN REPO
+# (Commented out to include CSVs in version control)
+# *.csv
+
+# Documentation exports
+*.pdf
+*.docx

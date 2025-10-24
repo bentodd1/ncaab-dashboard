@@ -1,0 +1,210 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Report Width="7.631in" Name="Report1" xmlns="http://schemas.telerik.com/reporting/2025/2.0">
+  <DataSources>
+    <SqlDataSource QueryDesignerState="null" ParameterValues="{&quot;@MinEdge&quot;:&quot;3.0&quot;}" ConnectionString="SportsAnalytics" SelectCommand="dbo.usp_CalculateStrategyPerformance" SelectCommandType="StoredProcedure" Name="sqlDataSource2">
+      <Parameters>
+        <SqlDataSourceParameter DbType="Decimal" Name="@MinEdge">
+          <Value>
+            <String>3.0</String>
+          </Value>
+        </SqlDataSourceParameter>
+        <SqlDataSourceParameter DbType="String" Name="@SeasonYear" />
+        <SqlDataSourceParameter DbType="Date" Name="@StartDate" />
+        <SqlDataSourceParameter DbType="Date" Name="@EndDate" />
+      </Parameters>
+    </SqlDataSource>
+  </DataSources>
+  <Items>
+    <PageHeaderSection Height="1in" Name="pageHeaderSection1" />
+    <DetailSection Height="3.1in" Name="detailSection1">
+      <Items>
+        <Table DataSourceName="sqlDataSource2" Width="6.531in" Height="0.48in" Left="1.1in" Top="2.2in" Name="table1">
+          <Body>
+            <Cells>
+              <TableCell RowIndex="0" ColumnIndex="0" RowSpan="1" ColumnSpan="1">
+                <ReportItem>
+                  <TextBox Width="1.177in" Height="0.24in" Left="0in" Top="0in" Name="textBox2">
+                    <Bindings>
+                      <Binding Path="Value" Expression="=Fields.Period" />
+                    </Bindings>
+                  </TextBox>
+                </ReportItem>
+              </TableCell>
+              <TableCell RowIndex="0" ColumnIndex="1" RowSpan="1" ColumnSpan="1">
+                <ReportItem>
+                  <TextBox Width="1.177in" Height="0.24in" Left="0in" Top="0in" Name="textBox4">
+                    <Bindings>
+                      <Binding Path="Value" Expression="=Fields.TotalGames" />
+                    </Bindings>
+                  </TextBox>
+                </ReportItem>
+              </TableCell>
+              <TableCell RowIndex="0" ColumnIndex="3" RowSpan="1" ColumnSpan="1">
+                <ReportItem>
+                  <TextBox Width="1.177in" Height="0.24in" Left="0in" Top="0in" Name="textBox6">
+                    <Bindings>
+                      <Binding Path="Value" Expression="=Fields.Losses" />
+                    </Bindings>
+                  </TextBox>
+                </ReportItem>
+              </TableCell>
+              <TableCell RowIndex="0" ColumnIndex="4" RowSpan="1" ColumnSpan="1">
+                <ReportItem>
+                  <TextBox Width="1in" Height="0.24in" Left="0in" Top="0in" Name="textBox8" StyleName="">
+                    <Bindings>
+                      <Binding Path="Value" Expression="=Fields.WinPercentage" />
+                    </Bindings>
+                  </TextBox>
+                </ReportItem>
+              </TableCell>
+              <TableCell RowIndex="0" ColumnIndex="5" RowSpan="1" ColumnSpan="1">
+                <ReportItem>
+                  <TextBox Width="1in" Height="0.24in" Left="0in" Top="0in" Name="textBox10" StyleName="">
+                    <Bindings>
+                      <Binding Path="Value" Expression="=Fields.ProfitLoss_Per100Units" />
+                    </Bindings>
+                  </TextBox>
+                </ReportItem>
+              </TableCell>
+              <TableCell RowIndex="0" ColumnIndex="2" RowSpan="1" ColumnSpan="1">
+                <ReportItem>
+                  <TextBox Width="1in" Height="0.24in" Left="0in" Top="0in" Name="textBox12" StyleName="">
+                    <Bindings>
+                      <Binding Path="Value" Expression="=Fields.Wins" />
+                    </Bindings>
+                  </TextBox>
+                </ReportItem>
+              </TableCell>
+            </Cells>
+            <Columns>
+              <Column Width="1.177in" />
+              <Column Width="1.177in" />
+              <Column Width="1in" />
+              <Column Width="1.177in" />
+              <Column Width="1in" />
+              <Column Width="1in" />
+            </Columns>
+            <Rows>
+              <Row Height="0.24in" />
+            </Rows>
+          </Body>
+          <Corner />
+          <Style>
+            <BorderStyle Default="Solid" Left="Solid" Right="Solid" />
+          </Style>
+          <RowGroups>
+            <TableGroup Name="detailTableGroup">
+              <Groupings>
+                <Grouping />
+              </Groupings>
+            </TableGroup>
+          </RowGroups>
+          <ColumnGroups>
+            <TableGroup Name="tableGroup">
+              <ReportItem>
+                <TextBox Width="1.177in" Height="0.24in" Left="0in" Top="0in" Value="Periods" Name="textBox1" />
+              </ReportItem>
+            </TableGroup>
+            <TableGroup Name="tableGroup1">
+              <ReportItem>
+                <TextBox Width="1.177in" Height="0.24in" Left="0in" Top="0in" Value="TotalGames" Name="textBox3" />
+              </ReportItem>
+            </TableGroup>
+            <TableGroup Name="group2">
+              <ReportItem>
+                <TextBox Width="1in" Height="0.24in" Left="0in" Top="0in" Value="Wins" Name="textBox11" StyleName="" />
+              </ReportItem>
+            </TableGroup>
+            <TableGroup Name="tableGroup2">
+              <ReportItem>
+                <TextBox Width="1.177in" Height="0.24in" Left="0in" Top="0in" Value="Losses" Name="textBox5" />
+              </ReportItem>
+            </TableGroup>
+            <TableGroup Name="group">
+              <ReportItem>
+                <TextBox Width="1in" Height="0.24in" Left="0in" Top="0in" Value="Percent" Name="textBox7" StyleName="" />
+              </ReportItem>
+            </TableGroup>
+            <TableGroup Name="group1">
+              <ReportItem>
+                <TextBox Width="1in" Height="0.24in" Left="0in" Top="0in" Value="Units" Name="textBox9" StyleName="" />
+              </ReportItem>
+            </TableGroup>
+          </ColumnGroups>
+        </Table>
+        <Graph DataSourceName="sqlDataSource2" Width="5.2in" Height="1.9in" Left="1.1in" Top="0in" Name="graph1">
+          <PlotAreaStyle LineWidth="0in" LineColor="LightGray" />
+          <Axes>
+            <GraphAxis Name="graphAxis2">
+              <MajorGridLineStyle LineWidth="1px" LineColor="LightGray" />
+              <MinorGridLineStyle Visible="False" LineWidth="1px" LineColor="LightGray" />
+              <Scale>
+                <CategoryScale />
+              </Scale>
+            </GraphAxis>
+            <GraphAxis Name="graphAxis1">
+              <MajorGridLineStyle LineWidth="1px" LineColor="LightGray" />
+              <MinorGridLineStyle Visible="False" LineWidth="1px" LineColor="LightGray" />
+              <Scale>
+                <NumericalScale />
+              </Scale>
+            </GraphAxis>
+          </Axes>
+          <CoordinateSystems>
+            <CartesianCoordinateSystem XAxis="graphAxis2" YAxis="graphAxis1" Name="cartesianCoordinateSystem1" />
+          </CoordinateSystems>
+          <Legend>
+            <Style LineWidth="0in" LineColor="LightGray" />
+          </Legend>
+          <Style>
+            <Padding Left="10px" Right="10px" Top="10px" Bottom="10px" />
+          </Style>
+          <SeriesGroups>
+            <GraphGroup Name="periodGroup">
+              <Groupings>
+                <Grouping Expression="= Fields.Period" />
+              </Groupings>
+              <Sortings>
+                <Sorting Expression="= Fields.Period" Direction="Asc" />
+              </Sortings>
+            </GraphGroup>
+          </SeriesGroups>
+          <CategoryGroups>
+            <GraphGroup Name="categoryGroup" />
+          </CategoryGroups>
+          <Series>
+            <BarSeries CoordinateSystem="cartesianCoordinateSystem1" CategoryGroup="categoryGroup" SeriesGroup="periodGroup" Y="= Sum(Fields.ProfitLoss_Per100Units)" DataPointLabel="= Sum(Fields.ProfitLoss_Per100Units)" Name="barSeries1">
+              <DataPointStyle Visible="True" LineWidth="0in" />
+              <DataPointLabelStyle Visible="False" />
+              <LegendItem Value="= Fields.Period" />
+              <MergedDataPoints />
+              <ToolTip Title="= Fields.Period" Text="= Sum(Fields.ProfitLoss_Per100Units)" />
+            </BarSeries>
+          </Series>
+          <Titles>
+            <GraphTitle Text="graph1" Position="TopCenter">
+              <Style LineWidth="0in" LineColor="LightGray" />
+            </GraphTitle>
+          </Titles>
+        </Graph>
+      </Items>
+    </DetailSection>
+    <PageFooterSection Height="1in" Name="pageFooterSection1" />
+  </Items>
+  <PageSettings PaperKind="Letter" Landscape="False" ColumnCount="1" ColumnSpacing="0in">
+    <Margins>
+      <MarginsU Left="1in" Right="1in" Top="1in" Bottom="1in" />
+    </Margins>
+  </PageSettings>
+  <StyleSheet>
+    <StyleRule>
+      <Style>
+        <Padding Left="2pt" Right="2pt" />
+      </Style>
+      <Selectors>
+        <TypeSelector Type="TextItemBase" />
+        <TypeSelector Type="HtmlTextBox" />
+      </Selectors>
+    </StyleRule>
+  </StyleSheet>
+</Report>
